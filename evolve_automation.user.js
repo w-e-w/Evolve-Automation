@@ -19172,6 +19172,30 @@
     }
 
     function updateUI() {
+        // Soul Gems income rate - part 1
+        if (resources.Soul_Gem.isUnlocked()) {
+            var currentSec = Math.floor(state.scriptTick / 4);
+            if (resources.Soul_Gem.currentQuantity > state.soulGemLast) {
+                state.soulGemIncomes.push({sec: currentSec, gems: resources.Soul_Gem.currentQuantity - state.soulGemLast})
+                state.soulGemLast = resources.Soul_Gem.currentQuantity;
+            }
+            var gems = 0;
+            let i = state.soulGemIncomes.length;
+            while (--i >= 0) {
+                let income = state.soulGemIncomes[i];
+                // Get all gems gained in last hour, or at least 10 last gems in any time frame, if rate is low
+                if (currentSec - income.sec > 3600 && gems > 10) {
+                    break;
+                } else {
+                    gems += income.gems;
+                }
+            }
+            // If loop was broken prematurely - clean up old records which we don't need anymore
+            if (i >= 0) {
+                state.soulGemIncomes = state.soulGemIncomes.splice(i+1);
+            }
+        }
+
         // Don't touch DOM when the tab is in the background
         if (document.hidden) {
             return;
@@ -19314,28 +19338,8 @@
             }
         }
 
-        // Soul Gems income rate
+        // Soul Gems income rate - part 2
         if (resources.Soul_Gem.isUnlocked()) {
-            let currentSec = Math.floor(state.scriptTick / 4);
-            if (resources.Soul_Gem.currentQuantity > state.soulGemLast) {
-                state.soulGemIncomes.push({sec: currentSec, gems: resources.Soul_Gem.currentQuantity - state.soulGemLast})
-                state.soulGemLast = resources.Soul_Gem.currentQuantity;
-            }
-            let gems = 0;
-            let i = state.soulGemIncomes.length;
-            while (--i >= 0) {
-                let income = state.soulGemIncomes[i];
-                // Get all gems gained in last hour, or at least 10 last gems in any time frame, if rate is low
-                if (currentSec - income.sec > 3600 && gems > 10) {
-                    break;
-                } else {
-                    gems += income.gems;
-                }
-            }
-            // If loop was broken prematurely - clean up old records which we don't need anymore
-            if (i >= 0) {
-                state.soulGemIncomes = state.soulGemIncomes.splice(i+1);
-            }
             let timePassed = currentSec - state.soulGemIncomes[0].sec;
             let gph = gems / timePassed * 3600;
             state.soulGemPerHour = gph;
