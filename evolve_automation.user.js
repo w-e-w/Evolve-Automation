@@ -2259,6 +2259,7 @@
         scriptTick: 1,
         multiplierTick: 0,
         buildingToggles: 0,
+        buildingPowerToggles: 0,
         evolutionAttempts: 0,
         tabHash: 0,
 
@@ -18589,6 +18590,7 @@
 
             resetCheckbox("autoBuild", "autoPower");
             removeBuildingToggles();
+            removeBuildingPowerToggles();
         };
 
         buildSettingsSection(sectionId, sectionName, resetFunction, updateBuildingSettingsContent);
@@ -19277,7 +19279,7 @@
             createSettingToggle(togglesNode, 'autoTrigger', 'Purchase triggered buildings, projects, and researches once conditions met');
             createSettingToggle(togglesNode, 'autoBuild', 'Construct buildings based on their weightings(user configured), and various rules(e.g. it won\'t build building which have no support to run)', createBuildingToggles, removeBuildingToggles);
             createSettingToggle(togglesNode, 'autoARPA', 'Builds ARPA projects if user enables them to be built.', createArpaToggles, removeArpaToggles);
-            createSettingToggle(togglesNode, 'autoPower', 'Manages power based on a priority order of buildings. Also disables currently useless buildings to save up resources.');
+            createSettingToggle(togglesNode, 'autoPower', 'Manages power based on a priority order of buildings. Also disables currently useless buildings to save up resources.', createBuildingPowerToggles, removeBuildingPowerToggles);
             createSettingToggle(togglesNode, 'autoStorage', 'Assigns crates and containers to resources needed for buildings enabled for Auto Build, queued buildings, researches, and enabled projects. Disabled when Crate/Container Manager governor task is active.', createStorageToggles, removeStorageToggles);
             createSettingToggle(togglesNode, 'autoMarket', 'Allows for automatic buying and selling of resources once specific ratios are met. Also allows setting up trade routes until a minimum specified money per second is reached. The will trade in and out in an attempt to maximize your trade routes.', createMarketToggles, removeMarketToggles);
             createSettingToggle(togglesNode, 'autoGalaxyMarket', 'Manages galaxy trade routes');
@@ -19329,6 +19331,13 @@
             let currentBuildingToggles = $('#mTabCivil .ea-building-toggle').length;
             if (currentBuildingToggles === 0 || currentBuildingToggles !== state.buildingToggles) {
                 createBuildingToggles();
+            }
+        }
+        // Per-building Auto Power toggles: independent feature with its own redraw self-heal logic, mirroring the Auto Build toggles above
+        if (settingsRaw.autoPower) {
+            let currentBuildingPowerToggles = $('#mTabCivil .ea-building-power-toggle').length;
+            if (currentBuildingPowerToggles === 0 || currentBuildingPowerToggles !== state.buildingPowerToggles) {
+                createBuildingPowerToggles();
             }
         }
         if (settingsRaw.autoStorage && game.global.settings.showStorage && $('#resStorage .ea-storage-toggle').length === 0) {
@@ -19508,6 +19517,38 @@
     function removeBuildingToggles() {
         $('#mTabCivil .ea-building-toggle').remove();
         state.buildingToggles = 0;
+    }
+
+    // Per-building Auto Power quick toggles, shown on each building button next to the Auto Build toggle.
+    // Independent feature: bound to the `bld_s_<building>` setting, the same "Auto Power" column of the
+    // Building settings table, so it stays in sync with the settings row and the "All Buildings" power switch.
+    function createBuildingPowerToggles() {
+        removeBuildingPowerToggles();
+
+        // Building power toggles redraw much more often than other toggles.
+        // With settings off, disable them.
+        if (!settings.showSettings) return;
+
+        for (let i = 0; i < BuildingManager.priorityList.length; i++) {
+            let building = BuildingManager.priorityList[i];
+            if (!building.isSwitchable()) continue;
+
+            let buildingElement = $('#' + building._vueBinding);
+            if (buildingElement.length) {
+                let settingKey = "bld_s_" + building._vueBinding;
+                buildingElement.append(addToggleCallbacks($(`
+                  <label tabindex="0" class="switch ea-building-power-toggle" style="position:absolute; margin-top: 24px; right:10%;">
+                    <input class="script_${settingKey}" type="checkbox"${settingsRaw[settingKey] ? " checked" : ""}/>
+                    <span class="check" style="height:5px; max-width:15px"></span>
+                  </label>`), settingKey));
+                state.buildingPowerToggles++;
+            }
+        }
+    }
+
+    function removeBuildingPowerToggles() {
+        $('#mTabCivil .ea-building-power-toggle').remove();
+        state.buildingPowerToggles = 0;
     }
 
     function createEjectToggles() {
@@ -20067,6 +20108,7 @@
         removeArpaToggles();
         removeCraftToggles();
         removeBuildingToggles();
+        removeBuildingPowerToggles();
         removeEjectToggles();
         removeSupplyToggles();
         $('#autoScriptContainer').remove();
