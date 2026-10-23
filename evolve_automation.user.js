@@ -19505,7 +19505,7 @@
             if (buildingElement.length) {
                 let settingKey = "bat" + building._vueBinding;
                 buildingElement.append(addToggleCallbacks($(`
-                  <label tabindex="0" class="switch ea-building-toggle" style="position:absolute; margin-top: 24px; left:10%;">
+                  <label tabindex="0" class="switch ea-building-toggle" style="position:absolute; margin-top: 36px; left:10%;">
                     <input class="script_${settingKey}" type="checkbox"${settingsRaw[settingKey] ? " checked" : ""}/>
                     <span class="check" style="height:5px; max-width:15px"></span>
                   </label>`), settingKey));
@@ -19537,7 +19537,7 @@
             if (buildingElement.length) {
                 let settingKey = "bld_s_" + building._vueBinding;
                 buildingElement.append(addToggleCallbacks($(`
-                  <label tabindex="0" class="switch ea-building-power-toggle" style="position:absolute; margin-top: 24px; right:10%;">
+                  <label tabindex="0" class="switch ea-building-power-toggle" style="position:absolute; margin-top: 36px; right:20%;">
                     <input class="script_${settingKey}" type="checkbox"${settingsRaw[settingKey] ? " checked" : ""}/>
                     <span class="check" style="height:5px; max-width:15px"></span>
                   </label>`), settingKey));
